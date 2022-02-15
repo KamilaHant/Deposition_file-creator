@@ -1,0 +1,36 @@
+units           real
+atom_style      charge
+boundary        p p p
+
+read_data       CONFIG
+
+group           frozen    id <= $frozen
+group           unfrozen  id > $frozen
+group           substrate id <> $frozen $atoms
+group           film      id > $atoms
+
+pair_style      reax/c NULL
+pair_coeff      * * ffield.reax $name1 $name2
+
+neighbor	0.3 bin
+neigh_modify    every 1 delay 0 check yes
+
+fix             1 all qeq/reax 1 0.0 10.0 1.0e-6 reax/c
+fix             2 frozen setforce 0 0 0
+fix             3 substrate nvt temp $T $T $damp
+fix             4 film nve 
+
+dump		101 all custom $runNVE REVCON id type q x y z vx vy vz fx fy fz
+dump_modify     101 sort 1
+compute         temp_unfrozen unfrozen temp
+thermo_style    custom step temp c_temp_unfrozen epair etotal press 
+thermo	        $thermo
+run_style       verlet
+
+timestep        $timestep
+run		$runNVE
+
+
+
+
+ 

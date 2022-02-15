@@ -1,0 +1,29 @@
+#!/bin/bash
+#PBS -N $name
+#PBS -l select=1:ncpus=1:mem=5000mb:scratch_local=5000mb
+#PBS -l walltime=$walltime
+#PBS -j oe
+
+module add lammps-nov2015
+hostname
+
+cd $SCRATCHDIR
+DATADIR="$datadir"
+cp -r $DATADIR/* 
+
+gcc REVCON_to_CONFIG_rescaling.c               -lm -o REVCON_to_CONFIG_rescaling.exe
+gcc Deposition_ZnO_LAMMPS.c                   -lm -o Deposition_ZnO_LAMMPS.exe
+gcc CONFIG_to_SNAPSHOT.c                       -lm -o CONFIG_to_SNAPSHOT.exe
+gcc REVCON_to_CONFIG.c                         -lm -o REVCON_to_CONFIG.exe
+
+$lines
+
+
+gcc $zpracovani -lm -o Zpracovani.exe
+./Zpracovani.exe
+
+cd files && tar -cf files.tgz * && cp files.tgz ../ && cd .. && rm -r files
+
+rm files.tgz
+
+cp -r * $DATADIR && rm -r *
